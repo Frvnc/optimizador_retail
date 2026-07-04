@@ -4,26 +4,27 @@
 
 @layer base {
   :root {
-    --background: 222 84% 5%;
-    --foreground: 210 40% 98%;
-    --card: 217 33% 12%;
-    --card-foreground: 210 40% 98%;
-    --popover: 217 33% 12%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 212 27% 84%;
-    --radius: 0.5rem;
+    /* Paleta crema / editorial — coherente con la presentación PPTX */
+    --background: 40 33% 94%;       /* #F7F2E9 crema */
+    --foreground: 30 15% 14%;       /* #2B2620 ink */
+    --card: 0 0% 100%;              /* blanco */
+    --card-foreground: 30 15% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 15% 14%;
+    --primary: 17 53% 42%;          /* #B8562E terracota */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 22% 90%;        /* gris cálido claro */
+    --secondary-foreground: 30 15% 14%;
+    --muted: 40 22% 90%;
+    --muted-foreground: 27 10% 48%; /* #8A8172 ink muted */
+    --accent: 165 24% 30%;          /* #3E6259 teal */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 6 60% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 26% 85%;           /* #E8E1D2 línea */
+    --input: 36 26% 85%;
+    --ring: 17 53% 42%;
+    --radius: 0.75rem;
   }
 
   * {
@@ -31,6 +32,122 @@
   }
 
   body {
-    @apply bg-[#0d1b2a] text-foreground;
+    @apply bg-background text-foreground;
   }
+}
+
+/* ── Keyframes (fuera de @layer para que no se purguen en el build) ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes softGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 86, 46, 0.0); }
+  50%      { box-shadow: 0 0 22px 2px rgba(184, 86, 46, 0.18); }
+}
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(40px, -30px) scale(1.08); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, 30px) scale(1.12); }
+}
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(30px, 40px) scale(1.05); }
+}
+@keyframes gradientMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes spinSlow {
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  /* ── Entrada suave (fade + subida) ── */
+  .animate-fade-up {
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── Aparición simple ── */
+  .animate-fade {
+    animation: fadeIn 0.5s ease both;
+  }
+
+  /* ── Brillo que recorre el hero (acento matemático) ── */
+  .shimmer-accent {
+    background: linear-gradient(
+      100deg,
+      #B8562E 0%,
+      #D98B5F 40%,
+      #F0D9C8 50%,
+      #D98B5F 60%,
+      #B8562E 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4.5s linear infinite;
+  }
+
+  /* ── Pulso sutil para destacar P* ── */
+  .glow-accent {
+    animation: softGlow 3.2s ease-in-out infinite;
+  }
+
+  /* ── Transición suave genérica ── */
+  .transition-smooth {
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Retrasos escalonados para listas */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.12s; }
+  .stagger-3 { animation-delay: 0.19s; }
+  .stagger-4 { animation-delay: 0.26s; }
+
+  /* ── Auroras flotantes del fondo ── */
+  .aurora-1 { animation: float1 18s ease-in-out infinite; }
+  .aurora-2 { animation: float2 22s ease-in-out infinite; }
+  .aurora-3 { animation: float3 26s ease-in-out infinite; }
+
+  /* ── Rejilla sutil de fondo — pareja en todo el viewport, sin máscara
+     que la desvanezca (una máscara + fixed causaba que solo repintara
+     bien al hacer scroll en algunos navegadores) ── */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(43, 38, 32, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(43, 38, 32, 0.045) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── Borde con degradado animado (hero) ── */
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(120deg, rgba(184,86,46,0.55), rgba(62,98,89,0.4), rgba(184,86,46,0.3), rgba(62,98,89,0.5));
+    background-size: 300% 300%;
+    animation: gradientMove 8s ease infinite;
+  }
+
+  /* ── Texto con degradado de marca ── */
+  .text-gradient {
+    background: linear-gradient(90deg, #B8562E, #3E6259);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .spin-slow { animation: spinSlow 1s linear infinite; }
 }

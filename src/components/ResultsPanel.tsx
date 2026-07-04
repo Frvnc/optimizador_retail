@@ -1,26 +1,47 @@
 "use client"
 import { useStore } from "@/lib/store"
 
-function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
+const clp = (n: number) =>
+  n.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
+
+function Step({ n, title, children, highlight }: {
+  n: number; title: string; children: React.ReactNode; highlight?: boolean
+}) {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800 p-4 space-y-1">
-      <p className="text-xs text-slate-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-500">{sub}</p>}
+    <div className={`animate-fade-up flex gap-3 rounded-xl border p-4 stagger-${n <= 4 ? n : 4} ${
+      highlight
+        ? "border-[#B8562E]/40 bg-[#B8562E]/[0.05]"
+        : "border-[#E8E1D2] bg-white"
+    }`}>
+      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+        highlight ? "bg-[#B8562E] text-white" : "bg-[#F0EAdc] text-[#8A8172]"
+      }`}>
+        {n}
+      </div>
+      <div className="space-y-1.5 min-w-0">
+        <p className="text-xs uppercase tracking-wide text-[#8A8172]">{title}</p>
+        <div className="font-mono text-sm sm:text-base text-[#2B2620] leading-relaxed break-words">{children}</div>
+      </div>
     </div>
   )
 }
-
-const clp = (n: number) =>
-  n.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
 
 export function ResultsPanel() {
   const { opt, reg, cf, cv } = useStore()
 
   if (!opt || !reg) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-slate-500 text-sm">
-        Ingresa datos y presiona <span className="text-orange-400">Calcular</span> para ver los resultados
+      <div className="rounded-xl border border-dashed border-[#E8E1D2] p-8 text-center text-[#8A8172] text-sm">
+        Ingresa datos y presiona <span className="text-[#B8562E]">Calcular</span> para ver los resultados
+      </div>
+    )
+  }
+
+  if (!opt.isValid) {
+    return (
+      <div className="rounded-xl border border-dashed border-[#d9b3ac] bg-[#A6453D]/[0.05] p-8 text-center text-[#8a382f] text-sm">
+        El modelo no tiene un óptimo válido con estos datos (pendiente de demanda b = {reg.b.toFixed(4)}).
+        Revisa la tabla de datos.
       </div>
     )
   }
@@ -30,54 +51,77 @@ export function ResultsPanel() {
   const deriv2b = (2 * reg.b).toFixed(4)
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Precio óptimo P*" value={clp(opt.pStar)} sub="CLP por unidad" color="text-orange-400" />
-        <StatCard label="Unidades Q*" value={Math.round(opt.qStar).toString()} sub="unidades/mes" color="text-blue-400" />
-        <StatCard label="Beneficio B*" value={clp(opt.bStar)} sub="CLP/mes" color="text-teal-400" />
-        <StatCard
-          label="Elasticidad E(P*)"
-          value={opt.eStar.toFixed(3)}
-          sub={Math.abs(opt.eStar) > 1 ? "Demanda elástica ✓" : "Demanda inelástica"}
-          color={Math.abs(opt.eStar) > 1 ? "text-green-400" : "text-yellow-400"}
-        />
-      </div>
+    <div className="space-y-3">
+      <Step n={1} title="Función de demanda (regresión lineal)">
+        <span className="text-[#8A8172]">Q(P) = </span>
+        <span className="text-[#5B7FA6]">{reg.a.toFixed(2)}</span>
+        <span className="text-[#8A8172]"> − </span>
+        <span className="text-[#5B7FA6]">{reg.b.toFixed(4)}</span>
+        <span className="text-[#8A8172]">·P</span>
+        <span className="ml-2 text-xs text-[#3E6259]">(R² = {reg.r2.toFixed(4)})</span>
+      </Step>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-800 p-4 space-y-2">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide mb-3">Desarrollo algebraico</h4>
-        <div className="font-mono text-sm space-y-1.5 text-slate-300">
-          <p><span className="text-slate-500">Q(P) =</span> {reg.a.toFixed(2)} − {reg.b.toFixed(4)}·P &nbsp;<span className="text-slate-500">(R²={reg.r2.toFixed(4)})</span></p>
-          <p><span className="text-slate-500">I(P) =</span> {reg.a.toFixed(2)}P − {reg.b.toFixed(4)}P²</p>
-          <p><span className="text-slate-500">B(P) =</span> −{reg.b.toFixed(4)}P² + {coefB}P − {coefC}</p>
-          <p><span className="text-slate-500">B&apos;(P) =</span> −{deriv2b}P + {coefB} = 0</p>
-          <p className="text-orange-400 font-semibold">P* = {opt.pStar.toFixed(0)} CLP</p>
-          <p>
-            <span className="text-slate-500">B&apos;&apos;(P) =</span> −{deriv2b} &lt; 0
-            &nbsp;<span className="text-green-400">✓ máximo confirmado</span>
-          </p>
-        </div>
-      </div>
+      <Step n={2} title="Ingreso total  I(P) = P · Q(P)">
+        <span className="text-[#8A8172]">I(P) = </span>
+        <span className="text-[#5B7FA6]">{reg.a.toFixed(2)}P − {reg.b.toFixed(4)}P²</span>
+      </Step>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <p className="text-xs text-slate-400 uppercase tracking-wide mb-2">Break-even</p>
-          <p className="font-mono text-sm text-slate-300">
-            P₁ = <span className="text-yellow-400">{Math.round(opt.breakEven1).toLocaleString("es-CL")} CLP</span>
-          </p>
-          <p className="font-mono text-sm text-slate-300">
-            P₂ = <span className="text-yellow-400">{Math.round(opt.breakEven2).toLocaleString("es-CL")} CLP</span>
+      <Step n={3} title="Costo total  C(P) = CF + cv · Q(P)">
+        <span className="text-[#8A8172]">C(P) = </span>
+        <span className="text-[#A6453D]">{clp(cf)} + {clp(cv)}·Q</span>
+      </Step>
+
+      <Step n={4} title="Beneficio  B(P) = I(P) − C(P)">
+        <span className="text-[#8A8172]">B(P) = </span>
+        <span className="text-[#3E6259]">−{reg.b.toFixed(4)}P² + {coefB}P − {coefC}</span>
+      </Step>
+
+      <Step n={5} title="Condición de óptimo  B′(P) = 0">
+        <span className="text-[#8A8172]">B′(P) = </span>
+        <span className="text-[#2B2620]">−{deriv2b}P + {coefB} = 0</span>
+      </Step>
+
+      <Step n={6} title="Precio óptimo" highlight>
+        <span className="text-[#8A8172]">P* = (a + cv·b) / (2b) = </span>
+        <span className="text-[#B8562E] font-bold text-lg">{clp(opt.pStar)}</span>
+      </Step>
+
+      <Step n={7} title="Criterio de la segunda derivada">
+        <span className="text-[#8A8172]">B″(P) = </span>
+        <span className="text-[#2B2620]">−{deriv2b} &lt; 0</span>
+        <span className="ml-2 text-[#3E6259]">✓ es un máximo</span>
+      </Step>
+
+      {/* Break-even + verificación */}
+      {opt.hasBreakEven ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div className="rounded-xl border border-[#E8E1D2] bg-white p-4">
+            <p className="text-xs text-[#8A8172] uppercase tracking-wide mb-2">Puntos de equilibrio (B = 0)</p>
+            <p className="font-mono text-sm text-[#5c5346]">
+              P₁ = <span className="text-[#C99A3E]">{clp(opt.breakEven1)}</span>
+            </p>
+            <p className="font-mono text-sm text-[#5c5346]">
+              P₂ = <span className="text-[#C99A3E]">{clp(opt.breakEven2)}</span>
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#E8E1D2] bg-white p-4">
+            <p className="text-xs text-[#8A8172] uppercase tracking-wide mb-2">Verificación</p>
+            <p className="font-mono text-sm text-[#5c5346]">
+              {Math.round(opt.breakEven1).toLocaleString("es-CL")} &lt;{" "}
+              <span className="text-[#B8562E]">{Math.round(opt.pStar).toLocaleString("es-CL")}</span>{" "}
+              &lt; {Math.round(opt.breakEven2).toLocaleString("es-CL")}
+            </p>
+            <p className="text-xs text-[#3E6259] mt-1">P* está dentro del intervalo de ganancia ✓</p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#d9b3ac] bg-[#A6453D]/[0.05] p-4 pt-1">
+          <p className="text-xs text-[#8a382f] uppercase tracking-wide mb-2 mt-3">Puntos de equilibrio (B = 0)</p>
+          <p className="text-sm text-[#8a382f]">
+            No existen: B(P) es negativo para todo precio (B* = {clp(opt.bStar)}). El negocio no es rentable con estos costos.
           </p>
         </div>
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <p className="text-xs text-slate-400 uppercase tracking-wide mb-2">Verificación</p>
-          <p className="text-sm text-slate-300">
-            {Math.round(opt.breakEven1).toLocaleString()} &lt;{" "}
-            <span className="text-orange-400">{Math.round(opt.pStar).toLocaleString()}</span>{" "}
-            &lt; {Math.round(opt.breakEven2).toLocaleString()}
-          </p>
-          <p className="text-xs text-green-400 mt-1">P* dentro del intervalo de ganancia ✓</p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
