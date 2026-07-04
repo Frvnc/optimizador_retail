@@ -73,6 +73,30 @@
 @keyframes spinSlow {
   to { transform: rotate(360deg); }
 }
+@keyframes pingRing {
+  0%   { r: 6; opacity: 0.5; }
+  70%  { r: 15; opacity: 0; }
+  100% { r: 15; opacity: 0; }
+}
+@keyframes pingDot {
+  0%   { transform: scale(1); opacity: 0.7; }
+  70%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes float4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-35px, -25px) scale(1.1); }
+}
+@keyframes sparklePop {
+  0%   { transform: scale(0) rotate(-25deg); opacity: 0; }
+  55%  { transform: scale(1.35) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes logoShine {
+  0%   { left: -60%; }
+  10%  { left: 140%; }
+  100% { left: 140%; }
+}
 
 @layer utilities {
   /* ── Entrada suave (fade + subida) ── */
@@ -107,6 +131,16 @@
     animation: softGlow 3.2s ease-in-out infinite;
   }
 
+  /* ── Anillo pulsante para marcar P* en los gráficos ── */
+  .pulse-ring {
+    animation: pingRing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* ── Punto pulsante para llamar la atención sobre un botón de ayuda ── */
+  .dot-ping {
+    animation: pingDot 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
   /* ── Transición suave genérica ── */
   .transition-smooth {
     transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
@@ -122,6 +156,70 @@
   .aurora-1 { animation: float1 18s ease-in-out infinite; }
   .aurora-2 { animation: float2 22s ease-in-out infinite; }
   .aurora-3 { animation: float3 26s ease-in-out infinite; }
+  .aurora-4 { animation: float4 24s ease-in-out infinite; }
+
+  /* ── Difuminado cálido "cafecito" que recorre el fondo muy lento ── */
+  .coffee-wash {
+    background: linear-gradient(135deg, #F7F2E9 0%, #F3E7D4 22%, #EAD9BE 45%, #F3E7D4 68%, #F7F2E9 100%);
+    background-size: 300% 300%;
+    animation: gradientMove 30s ease infinite;
+  }
+
+  /* ── Grano de papel muy sutil sobre el fondo ── */
+  .paper-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
+
+  /* ── Viñeteado leve para enmarcar el contenido ── */
+  .vignette {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(43, 38, 32, 0.06) 100%);
+  }
+
+  /* ── Sombras con tinte cálido (café), en vez de gris neutro ── */
+  .shadow-warm-sm {
+    box-shadow: 0 1px 2px rgba(107, 78, 55, 0.06), 0 1px 3px rgba(107, 78, 55, 0.05);
+  }
+  .shadow-warm-md {
+    box-shadow: 0 6px 16px -4px rgba(107, 78, 55, 0.14), 0 3px 8px -3px rgba(107, 78, 55, 0.08);
+  }
+  .shadow-warm-xl {
+    box-shadow: 0 20px 40px -12px rgba(43, 38, 32, 0.35), 0 8px 18px -8px rgba(107, 78, 55, 0.18);
+  }
+
+  /* ── Línea divisoria con degradado (en vez de un borde sólido) ── */
+  .divider-fade {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #E8E1D2 20%, #E8E1D2 80%, transparent);
+  }
+
+  /* ── Números que no "bailan" al actualizarse ── */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Destello al lograr un ajuste excelente (R² > 0.99) ── */
+  .sparkle-pop {
+    animation: sparklePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ── Brillo que recorre el logo cada cierto tiempo ── */
+  .logo-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-shine::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    left: -60%;
+    width: 45%;
+    height: 220%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: rotate(20deg);
+    animation: logoShine 5s ease-in-out infinite;
+  }
 
   /* ── Rejilla sutil de fondo — pareja en todo el viewport, sin máscara
      que la desvanezca (una máscara + fixed causaba que solo repintara

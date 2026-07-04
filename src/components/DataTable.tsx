@@ -1,10 +1,13 @@
 "use client"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/lib/store"
 import { DataPoint } from "@/lib/math"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { InfoTerm } from "@/components/InfoTerm"
+import { SectionHelp } from "@/components/SectionHelp"
+import { RotateCcw } from "lucide-react"
 
 const DEMO: DataPoint[] = [
   { p: 5000, q: 178 }, { p: 5500, q: 167 }, { p: 6000, q: 154 }, { p: 6500, q: 142 },
@@ -14,11 +17,14 @@ const DEMO: DataPoint[] = [
 type Flash = { text: string; kind: "ok" | "error" }
 
 export function DataTable() {
-  const { data, setData, reg, productName, setProductName } = useStore()
+  const { data, setData, reg, productName, setProductName, resetAll } = useStore()
   const [rows, setRows] = useState<DataPoint[]>(data)
   const [msg, setMsg] = useState<Flash | null>(null)
   const [importing, setImporting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Resincroniza la copia editable cuando el store cambia por fuera (p. ej. al rehidratar desde localStorage)
+  useEffect(() => { setRows(data) }, [data])
 
   const isDemoData = JSON.stringify(data) === JSON.stringify(DEMO)
   const dirty = JSON.stringify(rows) !== JSON.stringify(data)
@@ -47,7 +53,15 @@ export function DataTable() {
   const loadDemo = () => {
     setRows(DEMO)
     setData(DEMO)
+    setProductName("Café de Especialidad 250g")
     flash("Datos de ejemplo (Café 250g) cargados", "ok")
+  }
+
+  const handleReset = () => {
+    if (window.confirm("¿Restablecer todo? Se borrarán el nombre del producto, los datos, los costos y los escenarios guardados en este navegador.")) {
+      resetAll()
+      flash("Todo restablecido — completa tus propios datos", "ok")
+    }
   }
 
   const flash = (t: string, kind: Flash["kind"] = "ok") => {
@@ -118,7 +132,7 @@ export function DataTable() {
     <div className="space-y-5 animate-fade">
       {/* ── Nombre del producto ── */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-[#8A8172] uppercase tracking-wide">
+        <label className="text-xs font-normal text-[#8A8172] uppercase tracking-wide">
           Producto analizado
         </label>
         <Input
@@ -130,12 +144,17 @@ export function DataTable() {
         <p className="text-xs text-[#a89f8f]">Aparece en el encabezado, en los resultados y en el informe PDF.</p>
       </div>
 
-      <div className="border-t border-[#E8E1D2]" />
+      <div className="divider-fade" />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="space-y-1">
           <h3 className="flex items-center gap-2 text-sm font-medium text-[#2B2620]">
             Datos históricos de ventas
+            <SectionHelp>
+              <p><b>Qué es:</b> los pares Precio → Unidades vendidas que se usan para ajustar el modelo de demanda.</p>
+              <p><b>Mínimo:</b> 3 pares válidos (precio y unidades mayores a cero) para poder calcular la regresión.</p>
+              <p><b>Consejo:</b> mientras más variedad de precios históricos tengas, más confiable es el ajuste (mira el R² una vez calculado).</p>
+            </SectionHelp>
             {isDemoData && (
               <Badge variant="outline" className="border-[#C99A3E] text-[#a17a1f] text-[10px] font-normal">
                 Datos de ejemplo
@@ -149,9 +168,10 @@ export function DataTable() {
           </p>
         </div>
         {reg && (
-          <Badge variant="outline" className="border-[#3E6259] text-[#3E6259] w-fit cursor-help"
-            title="R² indica qué tan bien el modelo predice tus ventas reales. Va de 0 a 1: mientras más cerca de 1, más confiable es la regresión.">
-            R² = {reg.r2.toFixed(4)}
+          <Badge variant="outline" className="border-[#3E6259] text-[#3E6259] w-fit">
+            <InfoTerm text="Qué tan bien el modelo predice tus ventas reales. Va de 0 a 1: mientras más cerca de 1, más confiable es la regresión.">
+              R²
+            </InfoTerm> = {reg.r2.toFixed(4)}
           </Badge>
         )}
       </div>
@@ -170,14 +190,15 @@ export function DataTable() {
             {rows.map((row, i) => {
               const rowInvalid = (row.p !== 0 && row.p < 0) || (row.q !== 0 && row.q < 0)
               return (
-                <tr key={i} className="border-t border-[#E8E1D2] hover:bg-[#F7F2E9]/60 transition-colors">
+                <tr key={i} className="animate-fade-up border-t border-[#E8E1D2] hover:bg-[#F7F2E9]/60 transition-colors"
+                  style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
                   <td className="px-4 py-2 text-[#a89f8f] text-xs">{i + 1}</td>
                   <td className="px-4 py-2">
                     <Input
                       type="number"
                       value={row.p || ""}
                       onChange={(e) => update(i, "p", e.target.value)}
-                      className={`h-8 bg-white text-[#2B2620] w-32 ${rowInvalid ? "border-[#A6453D] focus-visible:ring-[#A6453D]" : "border-[#E8E1D2]"}`}
+                      className={`h-8 rounded-lg bg-white text-[#2B2620] w-32 ${rowInvalid ? "border-[#A6453D] focus-visible:ring-[#A6453D]" : "border-[#E8E1D2]"}`}
                       placeholder="ej: 7500"
                       min={0}
                     />
@@ -187,7 +208,7 @@ export function DataTable() {
                       type="number"
                       value={row.q || ""}
                       onChange={(e) => update(i, "q", e.target.value)}
-                      className={`h-8 bg-white text-[#2B2620] w-28 ${rowInvalid ? "border-[#A6453D] focus-visible:ring-[#A6453D]" : "border-[#E8E1D2]"}`}
+                      className={`h-8 rounded-lg bg-white text-[#2B2620] w-28 ${rowInvalid ? "border-[#A6453D] focus-visible:ring-[#A6453D]" : "border-[#E8E1D2]"}`}
                       placeholder="ej: 118"
                       min={0}
                     />
@@ -195,7 +216,7 @@ export function DataTable() {
                   <td className="px-4 py-2">
                     <button
                       onClick={() => removeRow(i)}
-                      className="text-[#a89f8f] hover:text-[#A6453D] transition-colors text-xs"
+                      className="rounded-md px-1.5 py-1 text-[#a89f8f] hover:text-[#A6453D] hover:bg-[#A6453D]/10 transition-colors text-xs"
                       title="Eliminar fila"
                     >
                       ✕
@@ -230,6 +251,11 @@ export function DataTable() {
         <Button onClick={loadDemo} variant="outline" size="sm"
           className="border-[#E8E1D2] text-[#5c5346] hover:bg-[#F7F2E9]">
           Datos de ejemplo
+        </Button>
+        <Button onClick={handleReset} variant="outline" size="sm"
+          title="Borra nombre, datos, costos y escenarios guardados en este navegador"
+          className="border-[#E8E1D2] text-[#8A8172] hover:text-[#A6453D] hover:border-[#A6453D]/40 hover:bg-[#A6453D]/5">
+          <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Restablecer todo
         </Button>
         <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" onChange={onFile} className="hidden" />
 

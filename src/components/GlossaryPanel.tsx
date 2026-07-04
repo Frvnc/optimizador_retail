@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { HelpCircle, X } from "lucide-react"
 
 const TERMS: { term: string; short: string; detail: string }[] = [
@@ -71,7 +72,7 @@ export function GlossaryPanel() {
         <HelpCircle className="h-4 w-4" />
       </button>
 
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 animate-fade">
           <div
             className="absolute inset-0 bg-[#2B2620]/40 backdrop-blur-sm"
@@ -102,7 +103,8 @@ export function GlossaryPanel() {
               ))}
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

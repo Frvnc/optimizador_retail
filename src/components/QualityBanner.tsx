@@ -1,5 +1,6 @@
 "use client"
 import { useStore } from "@/lib/store"
+import { Sparkles } from "lucide-react"
 
 export function QualityBanner() {
   const { reg, data, opt } = useStore()
@@ -53,6 +54,9 @@ export function QualityBanner() {
           Ajuste sólido — R² = <span className="font-mono font-semibold">{reg.r2.toFixed(4)}</span> con {data.length} puntos.
           El modelo lineal explica el {(reg.r2 * 100).toFixed(1)}% de la variación de la demanda.
         </span>
+        {reg.r2 > 0.99 && (
+          <Sparkles key={data.length} className="sparkle-pop h-4 w-4 text-[#C99A3E] shrink-0" />
+        )}
       </div>
     )
   }

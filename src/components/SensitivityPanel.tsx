@@ -2,6 +2,7 @@
 import { useStore } from "@/lib/store"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
+import { InfoTerm } from "@/components/InfoTerm"
 
 const clp = (n: number) =>
   n.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
@@ -9,7 +10,7 @@ const clp = (n: number) =>
 function CostInput({
   label, value, min, max, step, color, onChange, hint
 }: {
-  label: string; value: number; min: number; max: number; step: number
+  label: React.ReactNode; value: number; min: number; max: number; step: number
   color: string; onChange: (v: number) => void; hint: string
 }) {
   return (
@@ -42,14 +43,14 @@ export function SensitivityPanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
         <CostInput
-          label="Costo Fijo (CF) — mensual"
+          label={<>Costo Fijo (<InfoTerm text="Gastos mensuales que no cambian según cuánto vendas: arriendo, sueldos fijos, etc. No afecta el precio óptimo P*, solo cuánto ganas en total.">CF</InfoTerm>) — mensual</>}
           value={cf} min={10000} max={1000000} step={5000}
           color="bg-[#B8562E]"
           onChange={v => setCosts(v, cv)}
           hint="Arriendo, sueldos fijos, etc. · No afecta P*"
         />
         <CostInput
-          label="Costo Variable (cv) — por unidad"
+          label={<>Costo Variable (<InfoTerm text="Lo que cuesta producir o comprar cada unidad: insumos, embalaje, etc. Si sube, el precio óptimo P* también sube.">cv</InfoTerm>) — por unidad</>}
           value={cv} min={100} max={20000} step={100}
           color="bg-[#5B7FA6]"
           onChange={v => setCosts(cf, v)}
@@ -58,7 +59,7 @@ export function SensitivityPanel() {
       </div>
 
       {opt && reg && opt.isValid && (
-        <div className="rounded-xl border border-[#E8E1D2] bg-white p-4 space-y-4 shadow-sm">
+        <div className="rounded-xl border border-[#E8E1D2] bg-white p-4 space-y-4 shadow-warm-sm">
           <div className="flex items-center justify-between">
             <p className="text-xs text-[#8A8172] uppercase tracking-widest">Impacto en tiempo real</p>
             <Button size="sm" onClick={() => addScenario()}
@@ -81,11 +82,15 @@ export function SensitivityPanel() {
             </div>
           </div>
           <div className="border-t border-[#E8E1D2] pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-[#8A8172]">
-            <p className="cursor-help" title="Si subes o bajas el Costo Fijo, el precio óptimo P* no se mueve — solo cambia cuánto ganas en total.">
-              ∂P*/∂CF = <span className="font-mono text-[#5c5346]">0</span> — P* no depende de CF
+            <p>
+              <InfoTerm text="La derivada del precio óptimo respecto al Costo Fijo. Da 0 porque si subes o bajas el Costo Fijo, el precio óptimo P* no se mueve — solo cambia cuánto ganas en total.">
+                ∂P*/∂CF
+              </InfoTerm> = <span className="font-mono text-[#5c5346]">0</span> — P* no depende de CF
             </p>
-            <p className="cursor-help" title="Por cada peso que sube el Costo Variable, el precio óptimo P* sube esta cantidad.">
-              ∂P*/∂cv = <span className="font-mono text-[#5c5346]">+{(1 / (2 * reg.b)).toFixed(0)}</span> — por cada $1 en cv
+            <p>
+              <InfoTerm text="La derivada del precio óptimo respecto al Costo Variable. Por cada peso que sube el Costo Variable, el precio óptimo P* sube esta cantidad.">
+                ∂P*/∂cv
+              </InfoTerm> = <span className="font-mono text-[#5c5346]">+{(1 / (2 * reg.b)).toFixed(0)}</span> — por cada $1 en cv
             </p>
           </div>
         </div>
@@ -93,7 +98,7 @@ export function SensitivityPanel() {
 
       {/* ── Comparador de escenarios ── */}
       {scenarios.length > 0 && (
-        <div className="animate-fade-up rounded-xl border border-[#E8E1D2] bg-white p-4 space-y-3 shadow-sm">
+        <div className="animate-fade-up rounded-xl border border-[#E8E1D2] bg-white p-4 space-y-3 shadow-warm-sm">
           <div className="flex items-center justify-between">
             <p className="text-xs text-[#8A8172] uppercase tracking-widest">
               Escenarios guardados ({scenarios.length})
