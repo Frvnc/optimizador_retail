@@ -90,7 +90,7 @@ export function SensitivityPanel() {
             <p>
               <InfoTerm text="La derivada del precio óptimo respecto al Costo Variable. Por cada peso que sube el Costo Variable, el precio óptimo P* sube esta cantidad.">
                 ∂P*/∂cv
-              </InfoTerm> = <span className="font-mono text-[#5c5346]">+{(1 / (2 * reg.b)).toFixed(0)}</span> — por cada $1 en cv
+              </InfoTerm> = <span className="font-mono text-[#5c5346]">+0.5</span> — por cada $1 en cv
             </p>
           </div>
         </div>
