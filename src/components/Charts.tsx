@@ -128,20 +128,20 @@ export function RegressionChart({ plain }: { plain?: boolean } = {}) {
             }}
           />
           {/* Banda de confianza: upper rellena, lower enmascara con fondo */}
-          <Area type="monotone" dataKey="q_upper" stroke="none" fill="url(#bandGrad)" legendType="none" tooltipType="none" />
-          <Area type="monotone" dataKey="q_lower" stroke="none" fill="#ffffff" legendType="none" tooltipType="none" />
+          <Area type="monotone" dataKey="q_upper" stroke="none" fill="url(#bandGrad)" legendType="none" tooltipType="none" isAnimationActive={!plain} />
+          <Area type="monotone" dataKey="q_lower" stroke="none" fill="#ffffff" legendType="none" tooltipType="none" isAnimationActive={!plain} />
           {/* Línea de regresión lineal */}
           <Line type="monotone" dataKey="q_reg"  stroke="#5B7FA6" strokeWidth={2.5} dot={false} name="q_reg"
-            animationDuration={900} animationEasing="ease-out" />
+            isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
           {/* Línea de regresión cuadrática (comparación) */}
           {regQuad && (
             <Line type="monotone" dataKey="q_quad" stroke="#8570A6" strokeWidth={1.75} strokeDasharray="6 4"
-              dot={false} name="q_quad" animationDuration={900} animationEasing="ease-out" />
+              dot={false} name="q_quad" isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
           )}
           {/* Puntos reales */}
           <Line type="monotone" dataKey="q_real" stroke="none" dot={<CustomDot />}
             activeDot={{ r: 8, fill: "#B8562E" }} name="q_real" connectNulls={false}
-            animationDuration={900} animationEasing="ease-out" />
+            isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
           {/* Marcador del precio óptimo P* con su cantidad Q* */}
           {opt && opt.isValid && (
             <ReferenceDot x={opt.pStar} y={opt.qStar} r={5}
@@ -218,11 +218,11 @@ export function FunctionsChart({ plain }: { plain?: boolean } = {}) {
           </>
         )}
         <Line type="monotone" dataKey="ip" name="I(P) Ingresos"  stroke="#5B7FA6" strokeWidth={2}   dot={false}
-          animationDuration={900} animationEasing="ease-out" />
+          isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
         <Line type="monotone" dataKey="cp" name="C(P) Costos"    stroke="#A6453D" strokeWidth={2}   dot={false}
-          animationDuration={900} animationEasing="ease-out" />
+          isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
         <Line type="monotone" dataKey="bp" name="B(P) Beneficio" stroke="#3E6259" strokeWidth={2.5} dot={false}
-          animationDuration={900} animationEasing="ease-out" />
+          isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
         <ReferenceDot x={opt.pStar} y={opt.bStar} r={5} shape={<PStarMarker label="Ganancia máxima" />}
           ifOverflow="extendDomain" />
       </LineChart>
@@ -268,7 +268,7 @@ export function ElasticityChart({ plain }: { plain?: boolean } = {}) {
             label={{ value: "E = −1  frontera elástica", fill: "#C99A3E", fontSize: 10, position: "insideBottomRight" }} />
           <ReferenceLine x={opt.pStar} stroke="#B8562E" strokeDasharray="5 3" strokeWidth={1.5} />
           <Line type="monotone" dataKey="ep" name="E(P)" stroke="#8570A6" strokeWidth={2.5} dot={false}
-            animationDuration={900} animationEasing="ease-out" />
+            isAnimationActive={!plain} animationDuration={900} animationEasing="ease-out" />
           <ReferenceDot x={opt.pStar} y={Math.max(-8, Math.min(0, opt.eStar))} r={5}
             shape={<PStarMarker label="E(P*)" color="#8570A6" />} ifOverflow="extendDomain" />
         </LineChart>

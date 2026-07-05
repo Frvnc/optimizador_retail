@@ -1,12 +1,11 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 import { useStore } from "@/lib/store"
 import { useCountUp } from "@/lib/useCountUp"
-import { exportReport } from "@/lib/pdf"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/DataTable"
 import { ResultsPanel } from "@/components/ResultsPanel"
-import { RegressionChart, FunctionsChart, ElasticityChart } from "@/components/Charts"
 import { SensitivityPanel } from "@/components/SensitivityPanel"
 import { MathHero } from "@/components/MathHero"
 import { QualityBanner } from "@/components/QualityBanner"
@@ -19,6 +18,14 @@ import {
 } from "lucide-react"
 
 type Icon = typeof Target
+
+// Recharts (~pesado) y sus 3 gráficos solo se cargan cuando realmente se
+// necesitan: al abrir la pestaña "Gráficas" o al exportar el PDF — no en la
+// carga inicial de la página.
+const chartLoading = () => <div className="h-[300px] rounded-xl bg-[#F7F2E9] animate-pulse" />
+const RegressionChart = dynamic(() => import("@/components/Charts").then((m) => m.RegressionChart), { ssr: false, loading: chartLoading })
+const FunctionsChart = dynamic(() => import("@/components/Charts").then((m) => m.FunctionsChart), { ssr: false, loading: chartLoading })
+const ElasticityChart = dynamic(() => import("@/components/Charts").then((m) => m.ElasticityChart), { ssr: false, loading: chartLoading })
 
 // ── Metric card con count-up + tooltip de fórmula ──────────────────────────
 function MetricCard({
@@ -127,6 +134,7 @@ const TABS = [
 export default function Home() {
   const { recalc, opt, reg, cf, cv, data, productName } = useStore()
   const [exporting, setExporting] = useState(false)
+  const [mountPdfCharts, setMountPdfCharts] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [activeTab, setActiveTab] = useState("datos")
   const [scrolled, setScrolled] = useState(false)
@@ -155,16 +163,24 @@ export default function Home() {
   const clp = (n: number) =>
     n.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
 
+  const waitForPaint = () =>
+    new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+
   const handleExport = async () => {
     if (!reg || !opt || !opt.isValid) return
     setExporting(true)
     try {
+      await import("@/components/Charts") // precarga el chunk antes de montar, para que no se capture el skeleton de carga
+      setMountPdfCharts(true)
+      await waitForPaint() // deja que las gráficas ocultas terminen de montarse y dibujarse
+      const { exportReport } = await import("@/lib/pdf")
       await exportReport({ productName, reg, opt, cf, cv, data })
     } catch (err) {
       console.error("Error al exportar PDF:", err)
       alert("No se pudo generar el PDF. Revisa la consola para más detalles.")
     } finally {
       setExporting(false)
+      setMountPdfCharts(false)
     }
   }
 
@@ -388,21 +404,25 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* ── Contenedor oculto: gráficas para capturar en el PDF ── */}
-      <div id="pdf-charts" aria-hidden className="fixed -left-[9999px] top-0 w-[760px] bg-white p-4 space-y-4">
-        <div data-pdf-chart className="bg-white p-3 rounded-xl">
-          <p className="text-sm text-[#2B2620] mb-2">Regresión lineal Q(P)</p>
-          <RegressionChart plain />
+      {/* ── Contenedor oculto: gráficas para capturar en el PDF ──
+          Solo se monta mientras se exporta, para no pagar el costo de
+          renderizar 3 gráficos invisibles en cada carga de la página. ── */}
+      {mountPdfCharts && (
+        <div id="pdf-charts" aria-hidden className="fixed -left-[9999px] top-0 w-[760px] bg-white p-4 space-y-4">
+          <div data-pdf-chart className="bg-white p-3 rounded-xl">
+            <p className="text-sm text-[#2B2620] mb-2">Regresión lineal Q(P)</p>
+            <RegressionChart plain />
+          </div>
+          <div data-pdf-chart className="bg-white p-3 rounded-xl">
+            <p className="text-sm text-[#2B2620] mb-2">Funciones I(P), C(P) y B(P)</p>
+            <FunctionsChart plain />
+          </div>
+          <div data-pdf-chart className="bg-white p-3 rounded-xl">
+            <p className="text-sm text-[#2B2620] mb-2">Elasticidad E(P)</p>
+            <ElasticityChart plain />
+          </div>
         </div>
-        <div data-pdf-chart className="bg-white p-3 rounded-xl">
-          <p className="text-sm text-[#2B2620] mb-2">Funciones I(P), C(P) y B(P)</p>
-          <FunctionsChart plain />
-        </div>
-        <div data-pdf-chart className="bg-white p-3 rounded-xl">
-          <p className="text-sm text-[#2B2620] mb-2">Elasticidad E(P)</p>
-          <ElasticityChart plain />
-        </div>
-      </div>
+      )}
     </div>
   )
 }
